@@ -1,5 +1,9 @@
 package classPremiere;
 
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultCellEditor;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -19,6 +23,8 @@ import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
@@ -33,6 +39,8 @@ public class Tableau extends JFrame {
 	private TableColumnModel modeleColonne;
 	private JTableHeader header;
 	private Set<Capteur> treeSet;
+	private JComboBox comboType;
+	private JComboBox comboBat;
  
     public Tableau(Set<Capteur> capteur) {
         super("tableau");
@@ -42,13 +50,46 @@ public class Tableau extends JFrame {
         	if (c.getConnect())
         		liste.add(c);
         }
+        
+        
         TableModel tableModel = new ModeleTableau(liste);
         table = new JTable(tableModel);
         modeleColonne = table.getColumnModel();
         for(int i=0;i<4;i++) {
         	modeleColonne.getColumn(i).setCellRenderer(new CellRenderer());
         }
-        header = table.getTableHeader();
+        
+        
+        header = new JTableHeader(modeleColonne);
+        table.setTableHeader(header);
+        Set<String> itemsTset = new TreeSet<>();
+        Set<String> itemsBset = new TreeSet<>();
+        for(Capteur c : liste) {
+        	itemsTset.add(c.getType().toString());
+        	itemsBset.add(c.getBatiment());
+        }
+        
+        String[] itemsT = new String[itemsTset.size()];
+        String[] itemsB = new String[itemsBset.size()];
+        itemsT[0]="Type";
+        itemsB[0]="Localisation";
+        
+        int i = 1;
+        for(String item : itemsTset) {
+        	itemsT[i]=item;
+        }
+        i = 1;
+        for(String item : itemsBset) {
+        	itemsB[i]=item;
+        }
+        comboType = new JComboBox<String>(new DefaultComboBoxModel<String>(itemsT));
+        comboBat = new JComboBox<String>(new DefaultComboBoxModel<String>(itemsB));
+        
+        
+        TableColumn col;
+        col = (TableColumn)table.getColumnModel().getColumn(1);
+        col.setHeaderValue("Type");
+        col.setHeaderRenderer(new ComboRenderer(itemsT));
         
         tableau = new JScrollPane(table);
         add(tableau);
@@ -58,7 +99,8 @@ public class Tableau extends JFrame {
     }
     
     class CellRenderer extends DefaultTableCellRenderer {
-    	private final Color rouge = new Color(247,35,12);
+		private static final long serialVersionUID = 1L;
+		private final Color rouge = new Color(247,35,12);
     	
     	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
     		Capteur c = ((ModeleTableau)table.getModel()).getCapteur(row);
@@ -75,6 +117,24 @@ public class Tableau extends JFrame {
     		return this;
     	}
     }
+    
+    class ComboRenderer extends JComboBox<String> implements TableCellRenderer {
+
+		private static final long serialVersionUID = 1L;
+
+		ComboRenderer(String[] itemsT) {
+          for (int i = 0; i < itemsT.length; i++) {
+            addItem(itemsT[i]);
+          }
+        }
+
+        public Component getTableCellRendererComponent(JTable table,
+            Object value, boolean isSelected, boolean hasFocus, int row,
+            int column) {
+          setSelectedItem(value);
+          return this;
+        }
+      }
  
     public static void main(String[] args) {
     	Set<Capteur> liste= new TreeSet<>();
